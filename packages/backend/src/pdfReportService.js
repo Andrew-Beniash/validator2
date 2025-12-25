@@ -36,6 +36,17 @@ export async function writeSummaryPdfForSession(session) {
   const doc = new PDFDocument({ size: 'A4', margin: 50 })
   let stream
 
+  // Shared visual style tokens
+  const PRIMARY_COLOR = '#4f46e5' // Indigo accent to match app UI
+  const TITLE_COLOR = '#111827'
+  const BODY_TEXT_COLOR = '#374151'
+  const MUTED_TEXT_COLOR = '#6b7280'
+  const DIVIDER_COLOR = '#e5e7eb'
+
+  const innerWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right
+  const contentWidth = Math.min(480, innerWidth)
+  const contentX = doc.page.margins.left + (innerWidth - contentWidth) / 2
+
   try {
     stream = fs.createWriteStream(filepath)
   } catch (error) {
@@ -78,30 +89,114 @@ export async function writeSummaryPdfForSession(session) {
   const summary = session.results.summary.text
   const generatedAt = session.results.summary.generatedAt || new Date().toISOString()
 
-  // Title
-  doc.fontSize(20).font('Helvetica-Bold')
-  doc.text('Problem Validation Summary Report', {
-    align: 'center'
-  })
-  doc.moveDown()
+  const bodyTextOptions = {
+    align: 'left',
+    width: contentWidth,
+    lineGap: 4
+  }
 
-  doc.fontSize(10).font('Helvetica')
-  doc.text(`Generated at: ${generatedAt}`)
+  const addHeader = () => {
+    doc
+      .fontSize(9)
+      .font('Helvetica')
+      .fillColor(MUTED_TEXT_COLOR)
+
+    // App name on the left
+    doc.text('Problem Discovery Platform', doc.page.margins.left, 20, {
+      align: 'left',
+      width: innerWidth / 2
+    })
+
+    // Timestamp on the right
+    doc.text(
+      new Date(generatedAt).toLocaleString(),
+      doc.page.margins.left + innerWidth / 2,
+      20,
+      {
+        align: 'right',
+        width: innerWidth / 2
+      }
+    )
+
+    doc.moveDown(2)
+  }
+
+  const addSectionDivider = () => {
+    doc.moveDown(0.5)
+    doc
+      .strokeColor(DIVIDER_COLOR)
+      .lineWidth(1)
+      .moveTo(contentX, doc.y)
+      .lineTo(contentX + contentWidth, doc.y)
+      .stroke()
+    doc.moveDown(0.75)
+  }
+
+  const addHeading = (text) => {
+    doc.moveDown(0.5)
+    doc
+      .fontSize(14)
+      .font('Helvetica-Bold')
+      .fillColor(TITLE_COLOR)
+      .text(text, contentX, doc.y, {
+        width: contentWidth
+      })
+      .moveDown(0.25)
+
+    doc
+      .fontSize(11)
+      .font('Helvetica')
+      .fillColor(BODY_TEXT_COLOR)
+  }
+
+  // Apply header on every new page
+  doc.on('pageAdded', () => {
+    addHeader()
+  })
+
+  // First page header
+  addHeader()
+
+  // Title
+  doc
+    .fontSize(22)
+    .font('Helvetica-Bold')
+    .fillColor(TITLE_COLOR)
+    .text('Problem Validation Summary Report', contentX, doc.y, {
+      align: 'center',
+      width: contentWidth
+    })
+    .moveDown(0.4)
+
+  // Accent bar under title
+  doc
+    .fillColor(PRIMARY_COLOR)
+    .rect(contentX + (contentWidth - 140) / 2, doc.y, 140, 3)
+    .fill()
+    .moveDown(1)
+
+  // Metadata block
+  doc
+    .fontSize(10)
+    .font('Helvetica')
+    .fillColor(MUTED_TEXT_COLOR)
+    .text(`Generated at: ${generatedAt}`, contentX, doc.y, {
+      width: contentWidth
+    })
+
   if (session.apiConfig?.provider && session.apiConfig?.model) {
-    doc.text(`Model: ${session.apiConfig.provider} / ${session.apiConfig.model}`)
+    doc.text(`Model: ${session.apiConfig.provider} / ${session.apiConfig.model}`, contentX, doc.y, {
+      width: contentWidth
+    })
   }
   if (session.apiConfig?.email) {
-    doc.text(`Recipient: ${session.apiConfig.email}`)
+    doc.text(`Recipient: ${session.apiConfig.email}`, contentX, doc.y, {
+      width: contentWidth
+    })
   }
-  doc.moveDown(1.5)
+  doc.moveDown(1.25)
 
-  // Section headings
-  const addHeading = (text) => {
-    doc.fontSize(14).font('Helvetica-Bold')
-    doc.text(text)
-    doc.moveDown(0.5)
-    doc.fontSize(11).font('Helvetica')
-  }
+  addSectionDivider()
 
   addHeading('1. Executive Summary & Key Insights')
 
@@ -110,9 +205,7 @@ export async function writeSummaryPdfForSession(session) {
   paragraphs.forEach(p => {
     const trimmed = p.trim()
     if (trimmed.length > 0) {
-      doc.text(trimmed, {
-        align: 'left'
-      })
+      doc.text(trimmed, contentX, doc.y, bodyTextOptions)
       doc.moveDown(0.75)
     }
   })
@@ -123,14 +216,18 @@ export async function writeSummaryPdfForSession(session) {
   addHeading('2. Validation Recommendations')
   doc.text(
     'Use the insights above to prioritize discovery actions. Focus on validating the riskiest assumptions first, using interviews, experiments, and real-world behavior data.',
-    { align: 'left' }
+    contentX,
+    doc.y,
+    bodyTextOptions
   )
   doc.moveDown(1)
 
   addHeading('3. Risks & Next Steps')
   doc.text(
     'Review the synthesized analysis with your team and stakeholders. Align on the definition of the problem, target customer, and success criteria before investing heavily in solutions.',
-    { align: 'left' }
+    contentX,
+    doc.y,
+    bodyTextOptions
   )
 
   // Include the full text of each completed methodology analysis
@@ -150,15 +247,26 @@ export async function writeSummaryPdfForSession(session) {
       }
 
       // Method heading
-      doc.fontSize(13).font('Helvetica-Bold')
-      doc.text(step.name || step.id || 'Method', { align: 'left' })
-      doc.moveDown(0.5)
+      doc
+        .fontSize(13)
+        .font('Helvetica-Bold')
+        .fillColor(PRIMARY_COLOR)
+        .text(step.name || step.id || 'Method', contentX, doc.y, {
+          align: 'left',
+          width: contentWidth
+        })
+        .moveDown(0.25)
 
       // Method body
-      doc.fontSize(11).font('Helvetica')
-      doc.text(content, {
-        align: 'left'
-      })
+      doc
+        .fontSize(11)
+        .font('Helvetica')
+        .fillColor(BODY_TEXT_COLOR)
+        .text(content, contentX, doc.y, {
+          align: 'left',
+          width: contentWidth,
+          lineGap: 3
+        })
       doc.moveDown(1.25)
     })
   }
