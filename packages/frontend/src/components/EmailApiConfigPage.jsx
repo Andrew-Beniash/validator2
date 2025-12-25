@@ -72,7 +72,6 @@ function EmailApiConfigPage() {
       await saveToSession('config', values)
 
       const apiKey = watch('config.apiKey')
-
       const payload = {
         problem: {
           description: watch('problem.description')
@@ -104,21 +103,22 @@ function EmailApiConfigPage() {
         throw new Error(`Failed to initialize analysis: ${initResponse.status}`)
       }
 
-      // Start analysis run
-      const runResponse = await fetch('/api/analysis/run', {
+      // Fire-and-forget analysis run so the user
+      // immediately sees the progress view.
+      fetch('/api/analysis/run', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         credentials: 'include',
         body: JSON.stringify({ apiKey })
+      }).catch(err => {
+        // Log the error; ProcessingPage will surface failures via status polling
+        // eslint-disable-next-line no-console
+        console.error('Error starting analysis run:', err)
       })
 
-      if (!runResponse.ok) {
-        throw new Error(`Failed to start analysis: ${runResponse.status}`)
-      }
-
-      // Navigate to processing view
+      // Navigate to processing view to show progress
       navigate('/processing')
     } catch (error) {
       console.error('Error saving config:', error)
