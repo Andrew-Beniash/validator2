@@ -7,7 +7,7 @@ import { METHODOLOGY_STEPS } from './promptTemplates.js'
  * Mapping from methodology IDs to stable file keys
  * used in filenames.
  */
-const METHOD_FILE_KEYS = {
+export const METHOD_FILE_KEYS = {
   jtbd: 'JTBD',
   designThinking: 'DesignThinking',
   leanCanvas: 'LeanCanvas',
@@ -19,7 +19,7 @@ const METHOD_FILE_KEYS = {
  * Resolve base directory for analysis output files.
  * Prefers ANALYSIS_TMP_DIR, otherwise uses os.tmpdir()/validator-analysis.
  */
-function getBaseOutputDir() {
+export function getBaseOutputDir() {
   const envDir = process.env.ANALYSIS_TMP_DIR
   if (envDir && envDir.trim()) {
     return envDir
@@ -27,13 +27,13 @@ function getBaseOutputDir() {
   return path.join(os.tmpdir(), 'validator-analysis')
 }
 
-function sanitizeFilenamePart(part) {
+export function sanitizeFilenamePart(part) {
   return String(part || '')
     .trim()
     .replace(/[^a-z0-9_-]/gi, '_')
 }
 
-function getMethodKeyFromId(methodId) {
+export function getMethodKeyFromId(methodId) {
   return METHOD_FILE_KEYS[methodId] || sanitizeFilenamePart(methodId || 'method')
 }
 
@@ -109,4 +109,3 @@ export async function writeMethodFilesForSession(session) {
 
   return files
 }
-

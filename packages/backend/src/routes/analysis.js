@@ -5,6 +5,9 @@
 
 import { validateAnalysisPayload, createInitialAnalysisState } from '../validators/analysisValidator.js'
 import { runAnalysis } from '../analysisExecutor.js'
+import { generateSynthesisSummary } from '../synthesisService.js'
+import { writeSummaryPdfForSession } from '../pdfReportService.js'
+import { sendAnalysisReportEmail } from '../emailService.js'
 
 /**
  * POST /api/analysis/init
@@ -177,6 +180,127 @@ export async function runAnalysisRoute(req, res) {
     }
 
     console.error('Error running analysis:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message
+    })
+  }
+}
+
+/**
+ * POST /api/analysis/synthesize
+ * Generate synthesized summary and PDF report
+ */
+export async function synthesizeAnalysisRoute(req, res) {
+  try {
+    if (!req.session?.results?.analysis) {
+      return res.status(404).json({
+        success: false,
+        error: 'No analysis initialized for this session'
+      })
+    }
+
+    const analysis = req.session.results.analysis
+    if (analysis.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Analysis must be completed before synthesis'
+      })
+    }
+
+    const apiKey = req.body?.apiKey
+
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.length < 20) {
+      return res.status(400).json({
+        success: false,
+        error: 'A valid API key (>= 20 chars) is required'
+      })
+    }
+
+    await generateSynthesisSummary(req.session, apiKey)
+    const report = await writeSummaryPdfForSession(req.session)
+
+    const summaryMeta = req.session.results.summary || {}
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          generatedAt: summaryMeta.generatedAt,
+          provider: summaryMeta.provider,
+          model: summaryMeta.model
+        },
+        report: {
+          filename: report.filename
+        }
+      }
+    })
+  } catch (error) {
+    console.error('Error synthesizing analysis:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message
+    })
+  }
+}
+
+/**
+ * POST /api/analysis/email
+ * Send final report and analysis files via email
+ */
+export async function sendAnalysisEmailRoute(req, res) {
+  try {
+    if (!req.session?.results?.analysis || !req.session?.results?.report) {
+      return res.status(404).json({
+        success: false,
+        error: 'No completed analysis/report found for this session'
+      })
+    }
+
+    const analysis = req.session.results.analysis
+
+    if (analysis.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Analysis must be completed before sending email'
+      })
+    }
+
+    if (!req.session.apiConfig?.email) {
+      return res.status(400).json({
+        success: false,
+        error: 'No recipient email configured for this session'
+      })
+    }
+
+    const result = await sendAnalysisReportEmail(req.session)
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        messageId: result.messageId || null
+      }
+    })
+  } catch (error) {
+    if (error.type === 'EMAIL_CONFIG_ERROR') {
+      return res.status(500).json({
+        success: false,
+        error: 'Email configuration error',
+        message: error.message
+      })
+    }
+
+    if (error.type === 'EMAIL_SEND_ERROR') {
+      return res.status(502).json({
+        success: false,
+        error: 'Failed to send email',
+        message: error.message
+      })
+    }
+
+    console.error('Error sending analysis email:', error)
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
