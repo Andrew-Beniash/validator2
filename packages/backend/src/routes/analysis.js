@@ -3,6 +3,7 @@
  * Handles initialization and management of validation analysis sessions
  */
 
+import fs from 'fs'
 import { validateAnalysisPayload, createInitialAnalysisState } from '../validators/analysisValidator.js'
 import { runAnalysis } from '../analysisExecutor.js'
 import { generateSynthesisSummary } from '../synthesisService.js'
@@ -75,6 +76,81 @@ export function initializeAnalysis(req, res) {
 
   } catch (error) {
     console.error('Error initializing analysis:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message
+    })
+  }
+}
+
+/**
+ * GET /api/analysis/report
+ * Stream the final PDF report for the current session
+ */
+export function downloadAnalysisReportRoute(req, res) {
+  try {
+    if (!req.session?.results?.analysis || !req.session?.results?.report) {
+      return res.status(404).json({
+        success: false,
+        error: 'No completed analysis/report found for this session'
+      })
+    }
+
+    const analysis = req.session.results.analysis
+
+    if (analysis.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Analysis must be completed before downloading report'
+      })
+    }
+
+    const report = req.session.results.report
+    const filepath = report.filepath
+    const filename = report.filename || 'analysis_report.pdf'
+
+    if (!filepath) {
+      return res.status(404).json({
+        success: false,
+        error: 'Report file path not available for this session'
+      })
+    }
+
+    // Ensure file exists before attempting to stream
+    fs.stat(filepath, (statError, stats) => {
+      if (statError || !stats?.isFile()) {
+        console.error('Report file not found or inaccessible:', statError || 'Not a file')
+        return res.status(404).json({
+          success: false,
+          error: 'Report file not found for this session'
+        })
+      }
+
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${filename}"`
+      )
+
+      const stream = fs.createReadStream(filepath)
+
+      stream.on('error', (error) => {
+        console.error('Error streaming report file:', error)
+        if (!res.headersSent) {
+          res.status(500).json({
+            success: false,
+            error: 'Failed to read report file'
+          })
+        } else {
+          res.end()
+        }
+      })
+
+      stream.pipe(res)
+    })
+  } catch (error) {
+    console.error('Error handling report download:', error)
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
