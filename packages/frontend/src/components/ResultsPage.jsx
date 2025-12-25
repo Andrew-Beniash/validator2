@@ -15,6 +15,7 @@ function ResultsPage() {
   const [emailError, setEmailError] = useState(null)
 
   const email = watch('config.email')
+  const apiKey = watch('config.apiKey')
 
   useEffect(() => {
     let cancelled = false
@@ -53,12 +54,46 @@ function ResultsPage() {
         setSteps(analysis.steps || [])
 
         if (analysis.status !== 'completed') {
-          // If analysis is not yet complete, redirect back to processing
           navigate('/processing', { replace: true })
           return
         }
 
-        setIsLoading(false)
+        // Analysis is completed; ensure synthesis summary and PDF report exist
+        // by calling /api/analysis/synthesize with the in-memory API key.
+        if (!apiKey || typeof apiKey !== 'string' || apiKey.length < 20) {
+          setLoadError(
+            'Analysis is complete, but a valid API key is required to generate your summary report. Please go back to configuration and re-enter your API key.'
+          )
+          setStatus(analysis.status)
+          setIsLoading(false)
+          return
+        }
+
+        try {
+          const synthResponse = await fetch('/api/analysis/synthesize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ apiKey })
+          })
+
+          if (!synthResponse.ok) {
+            const synthData = await synthResponse.json().catch(() => null)
+            const message =
+              synthData?.error ||
+              'We were unable to generate your summary report. Please try again.'
+            setLoadError(message)
+          }
+        } catch (error) {
+          console.error('Error synthesizing analysis for results page:', error)
+          setLoadError(
+            'We were unable to generate your summary report. Please try again.'
+          )
+        } finally {
+          if (!cancelled) {
+            setIsLoading(false)
+          }
+        }
       } catch (error) {
         if (cancelled) return
         console.error('Error loading analysis status for results page:', error)
@@ -74,7 +109,7 @@ function ResultsPage() {
     return () => {
       cancelled = true
     }
-  }, [navigate])
+  }, [navigate, apiKey])
 
   const handleDownload = () => {
     window.open('/api/analysis/report', '_blank', 'noopener,noreferrer')
@@ -228,4 +263,3 @@ function ResultsPage() {
 }
 
 export default ResultsPage
-

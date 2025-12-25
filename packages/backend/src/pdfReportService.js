@@ -117,7 +117,7 @@ export async function writeSummaryPdfForSession(session) {
     }
   })
 
-  // New page for recommendations / risks if needed
+  // New page for recommendations / risks and detailed analyses if needed
   doc.addPage()
 
   addHeading('2. Validation Recommendations')
@@ -132,6 +132,36 @@ export async function writeSummaryPdfForSession(session) {
     'Review the synthesized analysis with your team and stakeholders. Align on the definition of the problem, target customer, and success criteria before investing heavily in solutions.',
     { align: 'left' }
   )
+
+  // Include the full text of each completed methodology analysis
+  const analysisSteps = Array.isArray(session.results?.analysis?.steps)
+    ? session.results.analysis.steps
+    : []
+
+  if (analysisSteps.length > 0) {
+    doc.addPage()
+    addHeading('4. Individual Method Analyses')
+
+    analysisSteps.forEach((step) => {
+      const content = step?.result?.content
+
+      if (!content || typeof content !== 'string') {
+        return
+      }
+
+      // Method heading
+      doc.fontSize(13).font('Helvetica-Bold')
+      doc.text(step.name || step.id || 'Method', { align: 'left' })
+      doc.moveDown(0.5)
+
+      // Method body
+      doc.fontSize(11).font('Helvetica')
+      doc.text(content, {
+        align: 'left'
+      })
+      doc.moveDown(1.25)
+    })
+  }
 
   doc.end()
 
