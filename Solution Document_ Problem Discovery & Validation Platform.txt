@@ -1,0 +1,299 @@
+﻿Solution Document: Problem Discovery & Validation Platform
+Executive Summary
+This document outlines the technical solution for a lightweight web-based platform that guides users through structured problem validation using multiple product discovery methodologies. The system leverages AI (OpenAI/Claude) to analyze user-defined problems through five distinct frameworks, then synthesizes findings into an actionable 2-page report.
+________________
+
+
+1. System Architecture
+1.1 Technology Stack (Lightweight Approach)
+Frontend:
+* React.js (single-page application)
+* Tailwind CSS for styling
+* React Hook Form for form management
+* Axios for API communication
+Backend:
+* Node.js with Express.js
+* RESTful API architecture
+* No database required (session-based storage)
+AI Integration:
+* OpenAI API (GPT-4/GPT-3.5-turbo)
+* Anthropic Claude API
+* Direct API calls from backend
+File & Email Services:
+* Node.js 'fs' module for temporary file storage
+* Nodemailer for email delivery
+* In-memory session storage (node-cache or memory-store)
+Hosting:
+* Frontend: Vercel or Netlify
+* Backend: Railway, Render, or Fly.io
+* No persistent database needed
+________________
+
+
+2. User Flow & Implementation
+Phase 1: Problem Input & Clarification
+Step 1: Initial Problem Description
+* User lands on homepage with text area for problem description
+* Simple form with textarea (500-2000 character limit)
+* "Next" button to proceed
+Step 2: Clarification Questions
+* System presents structured form with:
+   * Location/Country (dropdown)
+   * Target Customer (text input with examples)
+   * Team Size/Resources (radio buttons: Solo, Small Team 2-5, Team 6-15, Large Team 15+)
+* "Continue" button validates and proceeds
+Step 3: Email & API Configuration
+* Email input field (validated format)
+* API Key selection:
+   * Radio button: OpenAI or Claude
+   * Secure text input for API key (masked)
+   * Model dropdown (populated based on selection)
+      * OpenAI: gpt-4, gpt-4-turbo, gpt-3.5-turbo
+      * Claude: claude-3-opus, claude-3-sonnet, claude-3-haiku
+* "Start Analysis" button
+Technical Implementation:
+javascript
+// Session storage structure
+{
+  sessionId: "uuid-v4",
+  problemStatement: "string",
+  location: "string",
+  targetCustomer: "string",
+  teamSize: "string",
+  email: "string",
+  apiProvider: "openai|claude",
+  apiKey: "encrypted-string",
+  model: "string",
+  createdAt: "timestamp",
+  results: {}
+}
+________________
+
+
+Phase 2: Sequential AI Analysis
+Processing Flow:
+1. Analysis Execution Engine
+   * Sequential execution of 5 prompts (not parallel to manage costs)
+   * Each method has predefined prompt template
+   * User's problem statement injected into [INSERT PROBLEM STATEMENT HERE] placeholder
+   * Business goal injected for OST methodology
+2. Progress Display
+   * Real-time progress bar (0% → 100%)
+   * Current method name displayed
+   * Status messages:
+      * "Analyzing with Jobs-to-be-Done framework... (1/5)"
+      * "Running Design Thinking analysis... (2/5)"
+      * "Validating with Lean Canvas... (3/5)"
+      * "Performing Root Cause Analysis... (4/5)"
+      * "Building Opportunity Solution Tree... (5/5)"
+      * "Synthesizing results..."
+3. API Call Management
+javascript
+const methodologies = [
+  { name: 'JTBD', prompt: jtbdPromptTemplate },
+  { name: 'DesignThinking', prompt: designThinkingPromptTemplate },
+  { name: 'LeanCanvas', prompt: leanCanvasPromptTemplate },
+  { name: 'RootCauseAnalysis', prompt: rcaPromptTemplate },
+  { name: 'OpportunityTree', prompt: ostPromptTemplate }
+];
+
+
+// Sequential processing
+for (let method of methodologies) {
+  updateProgress(method.name);
+  const result = await callLLM(method.prompt);
+  saveToFile(method.name, result);
+  session.results[method.name] = result;
+}
+________________
+
+
+Phase 3: Synthesis & Delivery
+Step 1: Create Individual Files
+* Generate 5 .txt files in temporary directory:
+   * JTBD.txt
+   * DesignThinking.txt
+   * LeanCanvas.txt
+   * RootCauseAnalysis.txt
+   * OpportunityTree.txt
+Step 2: Synthesis Prompt
+* Combine all 5 results into synthesis prompt
+* Request 2-page comprehensive summary
+* Structure enforced through prompt (5 sections as specified)
+Step 3: File Storage & Email Delivery
+javascript
+// Generate final PDF or DOCX
+const finalReport = await generateReport(synthesisResult);
+
+
+// Store with session ID
+saveFile(`./reports/${sessionId}_final_report.pdf`, finalReport);
+
+
+// Email delivery
+await sendEmail({
+  to: session.email,
+  subject: 'Your Problem Validation Report',
+  body: emailTemplate,
+  attachments: [
+    { filename: 'problem_analysis.pdf', content: finalReport },
+    { filename: 'JTBD.txt', content: session.results.JTBD },
+    { filename: 'DesignThinking.txt', content: session.results.DesignThinking },
+    { filename: 'LeanCanvas.txt', content: session.results.LeanCanvas },
+    { filename: 'RootCauseAnalysis.txt', content: session.results.RootCauseAnalysis },
+    { filename: 'OpportunityTree.txt', content: session.results.OpportunityTree }
+  ]
+});
+Step 4: Completion Screen
+* Success message
+* Download button for immediate access
+* Confirmation that email has been sent
+* "Start New Analysis" button
+________________
+
+
+3. Technical Specifications
+3.1 API Integration Layer
+Abstraction for Multiple Providers:
+javascript
+class LLMService {
+  constructor(provider, apiKey, model) {
+    this.provider = provider;
+    this.apiKey = apiKey;
+    this.model = model;
+  }
+
+
+  async generateCompletion(prompt) {
+    if (this.provider === 'openai') {
+      return await this.callOpenAI(prompt);
+    } else if (this.provider === 'claude') {
+      return await this.callClaude(prompt);
+    }
+  }
+
+
+  async callOpenAI(prompt) {
+    // OpenAI API implementation
+  }
+
+
+  async callClaude(prompt) {
+    // Claude API implementation
+  }
+}
+3.2 Session Management
+* In-memory storage using node-cache
+* TTL: 2 hours
+* Cleanup routine runs every 30 minutes
+* No persistent database required
+3.3 File Management
+Temporary Storage:
+* Files stored in /tmp directory
+* Cleanup after email delivery (30-day retention optional)
+* File naming: {sessionId}_{methodology}.txt
+3.4 Security Considerations
+* API keys never stored permanently
+* Encrypted in session memory
+* HTTPS required for all communications
+* Rate limiting: 5 analyses per IP per hour
+* Input sanitization for all user inputs
+* Email validation to prevent spam
+________________
+
+
+4. UI/UX Design
+4.1 Page Structure
+Page 1: Problem Input
+* Clean, minimal design
+* Large textarea with character counter
+* Helpful placeholder text with examples
+Page 2: Clarification
+* 3-field form with clear labels
+* Inline help text for each field
+* Progress indicator (Step 2 of 4)
+Page 3: Configuration
+* Email input with validation
+* API provider toggle (visual distinction)
+* Collapsible "What is this?" sections
+Page 4: Processing
+* Full-screen progress view
+* Animated progress bar
+* Method name and description
+* Estimated time remaining
+* Cannot navigate away (warning if attempted)
+Page 5: Results
+* Success animation
+* Download button (prominent)
+* Email confirmation message
+* Option to start new analysis
+4.2 Responsive Design
+* Mobile-first approach
+* Works on tablets and desktops
+* Optimized for 320px to 1920px widths
+________________
+
+
+5. Prompt Templates
+5.1 Template Structure
+Each methodology prompt stored as template literal with placeholder:
+javascript
+const templates = {
+  jtbd: `You are a product strategist using the Jobs-to-be-Done (JTBD) framework...
+         The user described the problem as: "{{PROBLEM_STATEMENT}}".
+         Additional context:
+         - Location: {{LOCATION}}
+         - Target Customer: {{TARGET_CUSTOMER}}
+         - Team Resources: {{TEAM_SIZE}}
+         
+         [Full prompt as specified in vision document]`,
+  
+  // Similar structure for other 4 methodologies
+};
+5.2 Synthesis Template
+javascript
+const synthesisPrompt = `You have received five detailed text files...
+[Exact prompt from vision document]
+
+
+Files:
+1. JTBD Analysis:
+{{JTBD_CONTENT}}
+
+
+2. Design Thinking Analysis:
+{{DESIGN_THINKING_CONTENT}}
+
+
+[etc.]`;
+________________
+
+
+6. Email Template
+html
+Subject: Your Problem Validation Analysis is Ready
+
+
+Dear User,
+
+
+Your problem validation analysis has been completed. We've analyzed your problem statement through 5 proven methodologies:
+
+
+- Jobs-to-be-Done (JTBD)
+- Design Thinking – Define Phase
+- Lean Problem Validation
+- Root Cause Analysis
+- Opportunity Solution Tree
+
+
+Attached you'll find:
+- Final synthesized 2-page report (PDF)
+- 5 detailed methodology analyses (TXT files)
+
+
+Next steps: Review the validation path in Section 5 of the report.
+
+
+Best regards,
+Problem Discovery Platform
