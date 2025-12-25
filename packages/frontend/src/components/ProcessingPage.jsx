@@ -52,8 +52,7 @@ function ProcessingPage() {
 
         if (analysis.status === 'completed') {
           clearInterval(intervalId)
-          // TODO: Navigate to results page when implemented
-          // navigate('/results')
+          navigate('/results')
         } else if (analysis.status === 'failed') {
           clearInterval(intervalId)
         }
@@ -225,4 +224,3 @@ function ProcessingPage() {
 }
 
 export default ProcessingPage
-

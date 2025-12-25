@@ -48,6 +48,9 @@ NODE_ENV=development
 SESSION_MAX_ENTRIES=10000
 SESSION_TTL_MS=86400000
 SESSION_EVICTION_POLICY=lru
+ANALYSIS_TMP_DIR=/tmp/validator-analysis
+FILE_TTL_MS=172800000          # 48 hours
+FILE_CLEANUP_INTERVAL_MS=1800000 # 30 minutes
 ```
 
 ## Project Structure
@@ -145,6 +148,11 @@ The backend includes a robust in-memory session store with the following feature
 - **Size Limits** - 1MB session size limit
 - **Metrics** - Hit/miss tracking and statistics
 - **Auto-Cleanup** - Expired sessions cleaned every 60 seconds
+
+Sessions respect a configurable TTL:
+
+- Default TTL: 24 hours (`SESSION_TTL_MS`).
+- Expired sessions are removed from memory automatically.
 
 ### Session Schema
 

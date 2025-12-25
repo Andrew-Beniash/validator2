@@ -284,6 +284,7 @@ initSessionStore({
 - Default time-to-live for sessions in milliseconds
 - Default: 24 hours (86,400,000 ms)
 - Can be overridden per-session with `set(id, data, ttl)`
+ - Configurable via `SESSION_TTL_MS` environment variable
 
 **evictionPolicy**
 - `'lru'` - Evict least recently used session (recommended)
@@ -296,6 +297,26 @@ app.use(sessionMiddleware({
   autoCreate: true,      // Auto-create session if none exists
   touchOnAccess: true    // Refresh TTL on each access
 }))
+
+### Temporary File Management
+
+Analysis artifacts (per-method `.txt` files and final PDF reports) are written to a temporary directory:
+
+- Base directory is resolved from `ANALYSIS_TMP_DIR` or defaults to `os.tmpdir() + '/validator-analysis'`.
+- Each session stores file metadata under:
+  - `results.analysis.files[]` – Method files
+  - `results.report` – Summary PDF
+
+The backend runs a periodic cleanup task that:
+
+- Scans the analysis temp directory.
+- Keeps files that are still referenced by active sessions.
+- Deletes files that are not referenced or older than `FILE_TTL_MS` (default: 48 hours).
+
+Cleanup configuration:
+
+- `FILE_TTL_MS` – Max age for files before deletion (ms).
+- `FILE_CLEANUP_INTERVAL_MS` – How often cleanup runs (ms, default: 30 minutes).
 ```
 
 ## Middleware Usage

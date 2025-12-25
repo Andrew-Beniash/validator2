@@ -4,6 +4,7 @@ import ProblemInputPage from './components/ProblemInputPage'
 import ClarificationFormPage from './components/ClarificationFormPage'
 import EmailApiConfigPage from './components/EmailApiConfigPage'
 import ProcessingPage from './components/ProcessingPage'
+import ResultsPage from './components/ResultsPage'
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
       {
         path: 'processing',
         element: <ProcessingPage />
+      },
+      {
+        path: 'results',
+        element: <ResultsPage />
       }
     ]
   }
