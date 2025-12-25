@@ -1,0 +1,232 @@
+.problem-input-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.problem-input-container {
+  width: 100%;
+  max-width: 900px;
+  background: white;
+  border-radius: 12px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Header Section */
+.page-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.page-header h1 {
+  margin: 0 0 0.75rem 0;
+  font-size: 2.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.helper-text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #666;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Input Section */
+.input-section {
+  margin-bottom: 2rem;
+}
+
+.textarea-label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.problem-textarea {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-family: inherit;
+  line-height: 1.6;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: #fafafa;
+}
+
+.problem-textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.problem-textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Validation States */
+.problem-textarea.invalid {
+  border-color: #ef4444;
+}
+
+.problem-textarea.invalid:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.problem-textarea.valid {
+  border-color: #10b981;
+}
+
+.problem-textarea.valid:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Feedback Section */
+.feedback-section {
+  margin-top: 0.75rem;
+}
+
+.char-count {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.char-count.invalid {
+  color: #ef4444;
+}
+
+.char-count.valid {
+  color: #10b981;
+}
+
+.validation-message {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.validation-message.invalid {
+  color: #991b1b;
+  background: #fee2e2;
+  border-left: 3px solid #ef4444;
+}
+
+.validation-message.valid {
+  color: #065f46;
+  background: #d1fae5;
+  border-left: 3px solid #10b981;
+}
+
+/* Actions Section */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.next-button {
+  padding: 0.875rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: #6366f1;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+.next-button:hover:not(:disabled) {
+  background: #4f46e5;
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+
+.next-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+.next-button:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+  color: #9ca3af;
+}
+
+.next-button:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .problem-input-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.875rem;
+  }
+
+  .helper-text {
+    font-size: 0.95rem;
+  }
+
+  .problem-textarea {
+    font-size: 0.95rem;
+  }
+
+  .next-button {
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .problem-input-page {
+    padding: 1rem 0.5rem;
+  }
+
+  .problem-input-container {
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .helper-text {
+    font-size: 0.875rem;
+  }
+
+  .problem-textarea {
+    rows: 10;
+  }
+}
