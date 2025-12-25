@@ -82,6 +82,65 @@ function App() {
 />
 ```
 
+---
+
+### EmailApiConfigPage
+**Location**: `EmailApiConfigPage.jsx`
+
+A configuration form for email and AI provider setup (OpenAI/Claude) with dynamic model selection and session storage integration.
+
+**Features:**
+- Four validated form fields (email, provider, API key, model)
+- Dynamic model dropdown (updates based on provider selection)
+- API key masking with show/hide toggle
+- Session storage integration (GET/PUT /api/session)
+- Real-time validation on change, blur, and submit
+- Loading states and error handling
+- Accessible form design with ARIA attributes and fieldset
+- Responsive layout with radio group styling
+- **Security**: API key never stored in session (passed only to callback)
+
+**Usage:**
+```jsx
+import EmailApiConfigPage from './components/EmailApiConfigPage'
+
+function App() {
+  return <EmailApiConfigPage />
+}
+```
+
+**Props:**
+- `onNext?: (data) => void` - Optional callback when configuration is saved
+  - `data`: `{ email, provider, apiKey, model }`
+- `onBack?: () => void` - Optional callback for back button
+
+**State:** Manages form fields (email, provider, apiKey, model), validation errors, API key visibility, loading, and saving states internally
+
+**Session Integration:**
+- Loads existing config from `GET /api/session` on mount
+- Saves email, provider, and model to `PUT /api/session` on submit
+- **Security**: API key excluded from session (never stored)
+- Pre-populates email, provider, and model from session
+
+**Model Options:**
+- **OpenAI**: GPT-4, GPT-4 Turbo, GPT-3.5 Turbo
+- **Claude**: Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku
+- Model list updates dynamically when provider changes
+
+**Example with callbacks:**
+```jsx
+<EmailApiConfigPage
+  onNext={(config) => {
+    console.log('API Config:', config)
+    // config.apiKey available for validation request
+    // Navigate to validation page
+  }}
+  onBack={() => {
+    // Navigate back to clarification page
+  }}
+/>
+```
+
 ## Component Guidelines
 
 When adding new components to this directory:

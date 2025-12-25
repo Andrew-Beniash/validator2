@@ -1,21 +1,14 @@
-import { useFormContext } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
-import { useFormWizard } from '../context/FormWizardProvider'
+import { useState } from 'react'
 import './ProblemInputPage.css'
 
 const MIN_CHARS = 500
 const MAX_CHARS = 2000
 
 function ProblemInputPage() {
-  const navigate = useNavigate()
-  const { register, watch, trigger, formState: { errors } } = useFormContext()
-  const { saveToSession } = useFormWizard()
-
-  // Watch the problem description field
-  const description = watch('problem.description') || ''
-  const charCount = description.length
+  const [problemText, setProblemText] = useState('')
 
   // Derived validation state
+  const charCount = problemText.length
   const isTooShort = charCount > 0 && charCount < MIN_CHARS
   const isTooLong = charCount > MAX_CHARS
   const isValid = charCount >= MIN_CHARS && charCount <= MAX_CHARS
@@ -23,9 +16,6 @@ function ProblemInputPage() {
 
   // Determine validation message
   const getValidationMessage = () => {
-    if (errors.problem?.description) {
-      return errors.problem.description.message
-    }
     if (isEmpty) return null
     if (isTooShort) return 'Please provide at least 500 characters for enough detail.'
     if (isTooLong) return 'Please keep your description under 2000 characters.'
@@ -34,27 +24,27 @@ function ProblemInputPage() {
 
   // Determine validation state for styling
   const getValidationState = () => {
-    if (errors.problem?.description) return 'invalid'
     if (isEmpty) return 'neutral'
     if (isValid) return 'valid'
     return 'invalid'
   }
 
-  const handleNext = async () => {
-    // Trigger validation
-    const valid = await trigger('problem.description')
-    if (!valid) return
+  const handleTextChange = (e) => {
+    setProblemText(e.target.value)
+  }
 
-    try {
-      // Save to session
-      await saveToSession('problem', { description })
+  const handleNext = () => {
+    if (!isValid) return
 
-      // Navigate to next page
-      navigate('/clarification')
-    } catch (error) {
-      console.error('Failed to save problem:', error)
-      // Could show error banner here
-    }
+    // TODO: Wire up navigation to Page 2 in future task
+    console.log('Problem submitted:', {
+      text: problemText,
+      length: charCount
+    })
+
+    // Placeholder for future navigation/callback
+    // Example: onNext(problemText)
+    // Example: navigate('/page-2', { state: { problem: problemText } })
   }
 
   const validationMessage = getValidationMessage()
@@ -79,17 +69,8 @@ function ProblemInputPage() {
           <textarea
             id="problem-textarea"
             className={`problem-textarea ${validationState}`}
-            {...register('problem.description', {
-              required: 'Problem description is required',
-              minLength: {
-                value: MIN_CHARS,
-                message: 'Please provide at least 500 characters for enough detail.'
-              },
-              maxLength: {
-                value: MAX_CHARS,
-                message: 'Please keep your description under 2000 characters.'
-              }
-            })}
+            value={problemText}
+            onChange={handleTextChange}
             rows={12}
             placeholder="Example: Our small business clients struggle to track inventory across multiple locations. They currently use spreadsheets, which leads to stock discrepancies and lost sales. Store managers spend 3+ hours daily reconciling counts manually. This affects 200+ retail locations and costs an estimated $50K monthly in lost revenue and labor. We need a simple, real-time inventory sync solution that doesn't require expensive hardware or complex training."
             aria-describedby="char-count validation-message"

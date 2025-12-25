@@ -55,15 +55,23 @@ SESSION_EVICTION_POLICY=lru
 ```
 backend/
 ├── src/
-│   ├── index.js              # Main server file
-│   ├── sessionStore.js       # Session storage engine
-│   └── sessionMiddleware.js  # Express session middleware
+│   ├── index.js                    # Main server file
+│   ├── sessionStore.js             # Session storage engine
+│   ├── sessionMiddleware.js        # Express session middleware
+│   ├── promptTemplates.js          # Analysis prompt templates
+│   ├── routes/
+│   │   └── analysis.js             # Analysis API routes
+│   └── validators/
+│       └── analysisValidator.js    # Server-side validation
 ├── test/
-│   └── sessionStore.test.js  # Unit tests
-├── .env.example              # Environment template
-├── package.json              # Dependencies and scripts
-├── SESSION_STORE.md          # Detailed session store documentation
-└── test-session-api.sh       # Integration test script
+│   ├── sessionStore.test.js        # Session store tests
+│   └── promptTemplates.test.js     # Prompt templates tests
+├── .env.example                    # Environment template
+├── package.json                    # Dependencies and scripts
+├── SESSION_STORE.md                # Session store documentation
+├── ANALYSIS_API.md                 # Analysis API documentation
+├── PROMPT_TEMPLATES.md             # Prompt templates documentation
+└── test-session-api.sh             # Integration test script
 ```
 
 ## API Endpoints
@@ -101,6 +109,19 @@ backend/
 **GET /api/session/stats**
 - Get session store statistics
 - Returns: Metrics (hits, misses, entry count, etc.)
+
+### Analysis Endpoints
+
+**POST /api/analysis/init**
+- Initialize analysis session with validated form data
+- Body: Multi-step form payload (problem, clarification, config)
+- Returns: Analysis ID and status with 5 methodology steps
+- See: [ANALYSIS_API.md](./ANALYSIS_API.md)
+
+**GET /api/analysis/status**
+- Get current analysis status and progress
+- Returns: Status, step progress, and completion state
+- See: [ANALYSIS_API.md](./ANALYSIS_API.md)
 
 ### Application Endpoints
 
@@ -169,6 +190,28 @@ See [SESSION_STORE.md](./SESSION_STORE.md) for complete documentation including:
 - Migrating to Redis
 - Performance considerations
 
+## Analysis & Validation
+
+The backend includes comprehensive analysis capabilities with five validation methodologies.
+
+### Prompt Templates
+
+See [PROMPT_TEMPLATES.md](./PROMPT_TEMPLATES.md) for documentation on:
+- Five methodology prompt templates (JTBD, Design Thinking, Lean Canvas, Root Cause, OST)
+- Placeholder-based templating system
+- Context extraction and prompt building
+- Sequential execution metadata
+- Integration patterns
+
+### Analysis API
+
+See [ANALYSIS_API.md](./ANALYSIS_API.md) for complete API documentation including:
+- Endpoint specifications
+- Request/response formats
+- Validation rules
+- Error handling
+- Security considerations
+
 ## Testing
 
 ### Unit Tests
@@ -183,9 +226,11 @@ Test coverage includes:
 - Eviction policies (LRU, TTL)
 - Metrics tracking
 - Session schema validation
+- Prompt template generation
+- Context extraction and validation
 - Edge cases
 
-All 20 tests passing ✅
+All 36 tests passing ✅
 
 ### Integration Tests
 

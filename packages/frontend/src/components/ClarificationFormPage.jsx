@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useFormContext } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
+import { useFormWizard } from '../context/FormWizardProvider'
+import { useState } from 'react'
 import './ClarificationFormPage.css'
 
 const TEAM_SIZE_OPTIONS = [
@@ -10,207 +13,45 @@ const TEAM_SIZE_OPTIONS = [
   { value: '200+', label: '200+ people' }
 ]
 
-function ClarificationFormPage({ onNext }) {
-  // Form state
-  const [location, setLocation] = useState('')
-  const [targetCustomer, setTargetCustomer] = useState('')
-  const [teamSize, setTeamSize] = useState('')
-
-  // UI state
-  const [errors, setErrors] = useState({})
-  const [touched, setTouched] = useState({})
-  const [isLoading, setIsLoading] = useState(true)
+function ClarificationFormPage() {
+  const navigate = useNavigate()
+  const { register, trigger, formState: { errors } } = useFormContext()
+  const { saveToSession } = useFormWizard()
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
 
-  // Load session data on mount
-  useEffect(() => {
-    loadSessionData()
-  }, [])
-
-  const loadSessionData = async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/session', {
-        credentials: 'include'
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        const clarification = data.session?.inputs?.clarification
-
-        if (clarification) {
-          setLocation(clarification.location || '')
-          setTargetCustomer(clarification.targetCustomer || '')
-          setTeamSize(clarification.teamSize || '')
-        }
-      } else {
-        console.warn('Failed to load session:', response.status)
-      }
-    } catch (error) {
-      console.error('Error loading session data:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Validation functions
-  const validateLocation = (value) => {
-    const trimmed = value.trim()
-    if (!trimmed) {
-      return 'Please describe where your primary customers or teams are located.'
-    }
-    if (trimmed.length < 3) {
-      return 'Location should be at least 3 characters.'
-    }
-    return null
-  }
-
-  const validateTargetCustomer = (value) => {
-    const trimmed = value.trim()
-    if (!trimmed) {
-      return 'Please provide a bit more detail about who your primary customer is.'
-    }
-    if (trimmed.length < 20) {
-      return 'Please provide a bit more detail about who your primary customer is.'
-    }
-    return null
-  }
-
-  const validateTeamSize = (value) => {
-    if (!value || value === '') {
-      return 'Please choose a team size range.'
-    }
-    return null
-  }
-
-  // Validate all fields
-  const validateAll = () => {
-    const newErrors = {
-      location: validateLocation(location),
-      targetCustomer: validateTargetCustomer(targetCustomer),
-      teamSize: validateTeamSize(teamSize)
-    }
-
-    // Filter out null errors
-    const filteredErrors = Object.fromEntries(
-      Object.entries(newErrors).filter(([_, v]) => v !== null)
-    )
-
-    setErrors(filteredErrors)
-    return Object.keys(filteredErrors).length === 0
-  }
-
-  // Field change handlers
-  const handleLocationChange = (e) => {
-    const value = e.target.value
-    setLocation(value)
-    if (touched.location) {
-      const error = validateLocation(value)
-      setErrors(prev => ({ ...prev, location: error }))
-    }
-  }
-
-  const handleTargetCustomerChange = (e) => {
-    const value = e.target.value
-    setTargetCustomer(value)
-    if (touched.targetCustomer) {
-      const error = validateTargetCustomer(value)
-      setErrors(prev => ({ ...prev, targetCustomer: error }))
-    }
-  }
-
-  const handleTeamSizeChange = (e) => {
-    const value = e.target.value
-    setTeamSize(value)
-    if (touched.teamSize) {
-      const error = validateTeamSize(value)
-      setErrors(prev => ({ ...prev, teamSize: error }))
-    }
-  }
-
-  // Blur handlers
-  const handleBlur = (field) => {
-    setTouched(prev => ({ ...prev, [field]: true }))
-
-    let error = null
-    switch (field) {
-      case 'location':
-        error = validateLocation(location)
-        break
-      case 'targetCustomer':
-        error = validateTargetCustomer(targetCustomer)
-        break
-      case 'teamSize':
-        error = validateTeamSize(teamSize)
-        break
-      default:
-        break
-    }
-
-    if (error) {
-      setErrors(prev => ({ ...prev, [field]: error }))
-    } else {
-      setErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[field]
-        return newErrors
-      })
-    }
-  }
-
-  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSaveError(null)
 
-    // Validate all fields
-    const isValid = validateAll()
-    if (!isValid) {
+    // Validate all clarification fields
+    const valid = await trigger([
+      'clarification.location',
+      'clarification.targetCustomer',
+      'clarification.teamSize'
+    ])
+
+    if (!valid) {
       // Focus first invalid field
-      const firstError = ['location', 'targetCustomer', 'teamSize'].find(
-        field => errors[field]
-      )
+      const firstError = Object.keys(errors.clarification || {})[0]
       if (firstError) {
         document.getElementById(`${firstError}-input`)?.focus()
       }
       return
     }
 
-    // Save to session
     try {
       setIsSaving(true)
 
-      const response = await fetch('/api/session', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          inputs: {
-            clarification: {
-              location: location.trim(),
-              targetCustomer: targetCustomer.trim(),
-              teamSize
-            }
-          }
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to save: ${response.status}`)
+      // Get current form values (from RHF)
+      const values = {
+        location: document.getElementById('location-input').value,
+        targetCustomer: document.getElementById('targetCustomer-input').value,
+        teamSize: document.getElementById('teamSize-input').value
       }
 
-      const data = await response.json()
-      console.log('Clarification data saved:', data)
-
-      // TODO: Wire up navigation to Page 3 in future task
-      if (onNext) {
-        onNext({ location, targetCustomer, teamSize })
-      } else {
-        console.log('Next callback not provided - add routing later')
-      }
+      await saveToSession('clarification', values)
+      navigate('/config')
     } catch (error) {
       console.error('Error saving clarification:', error)
       setSaveError("We couldn't save your details right now. Please try again.")
@@ -219,17 +60,8 @@ function ClarificationFormPage({ onNext }) {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="clarification-form-page">
-        <div className="clarification-form-container">
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <p>Loading your session...</p>
-          </div>
-        </div>
-      </div>
-    )
+  const handleBack = () => {
+    navigate('/problem')
   }
 
   return (
@@ -262,17 +94,20 @@ function ClarificationFormPage({ onNext }) {
             <input
               id="location-input"
               type="text"
-              className={`text-input ${errors.location ? 'invalid' : ''}`}
-              value={location}
-              onChange={handleLocationChange}
-              onBlur={() => handleBlur('location')}
+              className={`text-input ${errors.clarification?.location ? 'invalid' : ''}`}
+              {...register('clarification.location', {
+                required: 'Please describe where your primary customers or teams are located.',
+                minLength: {
+                  value: 3,
+                  message: 'Location should be at least 3 characters.'
+                }
+              })}
               placeholder="e.g., US & UK, primarily remote teams in Europe"
-              aria-describedby={errors.location ? 'location-error' : undefined}
-              aria-invalid={errors.location ? 'true' : 'false'}
+              aria-invalid={errors.clarification?.location ? 'true' : 'false'}
             />
-            {errors.location && (
-              <div id="location-error" className="field-error" role="alert">
-                {errors.location}
+            {errors.clarification?.location && (
+              <div className="field-error" role="alert">
+                {errors.clarification.location.message}
               </div>
             )}
           </div>
@@ -288,18 +123,21 @@ function ClarificationFormPage({ onNext }) {
             </p>
             <textarea
               id="targetCustomer-input"
-              className={`textarea-input ${errors.targetCustomer ? 'invalid' : ''}`}
-              value={targetCustomer}
-              onChange={handleTargetCustomerChange}
-              onBlur={() => handleBlur('targetCustomer')}
+              className={`textarea-input ${errors.clarification?.targetCustomer ? 'invalid' : ''}`}
+              {...register('clarification.targetCustomer', {
+                required: 'Please provide a bit more detail about who your primary customer is.',
+                minLength: {
+                  value: 20,
+                  message: 'Please provide a bit more detail about who your primary customer is.'
+                }
+              })}
               rows={4}
               placeholder="e.g., HR managers at 200–1000 employee tech companies, or solo founders building their first SaaS product."
-              aria-describedby={errors.targetCustomer ? 'targetCustomer-error' : undefined}
-              aria-invalid={errors.targetCustomer ? 'true' : 'false'}
+              aria-invalid={errors.clarification?.targetCustomer ? 'true' : 'false'}
             />
-            {errors.targetCustomer && (
-              <div id="targetCustomer-error" className="field-error" role="alert">
-                {errors.targetCustomer}
+            {errors.clarification?.targetCustomer && (
+              <div className="field-error" role="alert">
+                {errors.clarification.targetCustomer.message}
               </div>
             )}
           </div>
@@ -315,12 +153,11 @@ function ClarificationFormPage({ onNext }) {
             </p>
             <select
               id="teamSize-input"
-              className={`select-input ${errors.teamSize ? 'invalid' : ''}`}
-              value={teamSize}
-              onChange={handleTeamSizeChange}
-              onBlur={() => handleBlur('teamSize')}
-              aria-describedby={errors.teamSize ? 'teamSize-error' : undefined}
-              aria-invalid={errors.teamSize ? 'true' : 'false'}
+              className={`select-input ${errors.clarification?.teamSize ? 'invalid' : ''}`}
+              {...register('clarification.teamSize', {
+                validate: (value) => value !== '' || 'Please choose a team size range.'
+              })}
+              aria-invalid={errors.clarification?.teamSize ? 'true' : 'false'}
             >
               {TEAM_SIZE_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
@@ -328,15 +165,22 @@ function ClarificationFormPage({ onNext }) {
                 </option>
               ))}
             </select>
-            {errors.teamSize && (
-              <div id="teamSize-error" className="field-error" role="alert">
-                {errors.teamSize}
+            {errors.clarification?.teamSize && (
+              <div className="field-error" role="alert">
+                {errors.clarification.teamSize.message}
               </div>
             )}
           </div>
 
           {/* Actions */}
           <div className="actions">
+            <button
+              type="button"
+              className="back-button"
+              onClick={handleBack}
+            >
+              Back
+            </button>
             <button
               type="submit"
               className="next-button"
