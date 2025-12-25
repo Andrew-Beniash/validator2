@@ -4,6 +4,7 @@
  */
 
 import { validateAnalysisPayload, createInitialAnalysisState } from '../validators/analysisValidator.js'
+import { runAnalysis } from '../analysisExecutor.js'
 
 /**
  * POST /api/analysis/init
@@ -100,6 +101,10 @@ export function getAnalysisStatus(req, res) {
         status: analysis.status,
         startedAt: analysis.startedAt,
         completedAt: analysis.completedAt,
+        currentStep: analysis.currentStep || null,
+        currentStepLabel: analysis.currentStepLabel || null,
+        currentStepIndex:
+          typeof analysis.currentStepIndex === 'number' ? analysis.currentStepIndex : null,
         steps: analysis.steps.map(step => ({
           id: step.id,
           name: step.name,
@@ -112,6 +117,66 @@ export function getAnalysisStatus(req, res) {
 
   } catch (error) {
     console.error('Error fetching analysis status:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message
+    })
+  }
+}
+
+/**
+ * POST /api/analysis/run
+ * Execute the analysis sequentially for all methodologies
+ */
+export async function runAnalysisRoute(req, res) {
+  try {
+    if (!req.session?.results?.analysis) {
+      return res.status(404).json({
+        success: false,
+        error: 'No analysis initialized for this session'
+      })
+    }
+
+    const apiKey = req.body?.apiKey
+
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.length < 20) {
+      return res.status(400).json({
+        success: false,
+        error: 'A valid API key (>= 20 chars) is required'
+      })
+    }
+
+    const analysis = await runAnalysis(req.session, apiKey)
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        status: analysis.status,
+        startedAt: analysis.startedAt,
+        completedAt: analysis.completedAt,
+        currentStep: analysis.currentStep || null,
+        currentStepLabel: analysis.currentStepLabel || null,
+        currentStepIndex:
+          typeof analysis.currentStepIndex === 'number' ? analysis.currentStepIndex : null,
+        steps: analysis.steps.map(step => ({
+          id: step.id,
+          name: step.name,
+          status: step.status,
+          hasResult: !!step.result
+        })),
+        error: analysis.error
+      }
+    })
+  } catch (error) {
+    if (error.type === 'ANALYSIS_CONFLICT') {
+      return res.status(409).json({
+        success: false,
+        error: error.message
+      })
+    }
+
+    console.error('Error running analysis:', error)
     return res.status(500).json({
       success: false,
       error: 'Internal server error',

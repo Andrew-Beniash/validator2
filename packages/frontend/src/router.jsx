@@ -3,6 +3,7 @@ import WizardLayout from './components/WizardLayout'
 import ProblemInputPage from './components/ProblemInputPage'
 import ClarificationFormPage from './components/ClarificationFormPage'
 import EmailApiConfigPage from './components/EmailApiConfigPage'
+import ProcessingPage from './components/ProcessingPage'
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
       {
         path: 'config',
         element: <EmailApiConfigPage />
+      },
+      {
+        path: 'processing',
+        element: <ProcessingPage />
       }
     ]
   }

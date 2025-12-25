@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import { initSessionStore } from './sessionStore.js'
 import sessionMiddleware, { sessionRoutes, requireSession } from './sessionMiddleware.js'
-import { initializeAnalysis, getAnalysisStatus } from './routes/analysis.js'
+import { initializeAnalysis, getAnalysisStatus, runAnalysisRoute } from './routes/analysis.js'
 
 dotenv.config()
 
@@ -56,6 +56,7 @@ app.get('/api/session/stats', sessionRoutes.stats)
 // Analysis routes
 app.post('/api/analysis/init', initializeAnalysis)
 app.get('/api/analysis/status', getAnalysisStatus)
+app.post('/api/analysis/run', runAnalysisRoute)
 
 // Example: Protected route requiring session
 app.get('/api/protected', requireSession(), (req, res) => {

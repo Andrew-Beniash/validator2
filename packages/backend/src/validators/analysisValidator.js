@@ -131,6 +131,7 @@ export function createInitialAnalysisState() {
       status: 'pending',
       result: null
     })),
-    error: null
+    error: null,
+    files: []
   }
 }

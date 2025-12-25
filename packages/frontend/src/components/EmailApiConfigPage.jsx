@@ -71,10 +71,55 @@ function EmailApiConfigPage() {
 
       await saveToSession('config', values)
 
-      // API key is now available via watch('config.apiKey') for next step
-      console.log('Config saved, ready for validation')
-      // TODO: Navigate to validation/results page
-      alert('Configuration saved! Validation feature coming soon.')
+      const apiKey = watch('config.apiKey')
+
+      const payload = {
+        problem: {
+          description: watch('problem.description')
+        },
+        clarification: {
+          location: watch('clarification.location'),
+          targetCustomer: watch('clarification.targetCustomer'),
+          teamSize: watch('clarification.teamSize')
+        },
+        config: {
+          email: values.email,
+          provider: values.provider,
+          model: values.model,
+          apiKey
+        }
+      }
+
+      // Initialize analysis session
+      const initResponse = await fetch('/api/analysis/init', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      })
+
+      if (!initResponse.ok) {
+        throw new Error(`Failed to initialize analysis: ${initResponse.status}`)
+      }
+
+      // Start analysis run
+      const runResponse = await fetch('/api/analysis/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ apiKey })
+      })
+
+      if (!runResponse.ok) {
+        throw new Error(`Failed to start analysis: ${runResponse.status}`)
+      }
+
+      // Navigate to processing view
+      navigate('/processing')
     } catch (error) {
       console.error('Error saving config:', error)
       setSaveError("We couldn't save your configuration. Please try again.")
