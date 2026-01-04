@@ -132,8 +132,11 @@ function IdeationPhasePage() {
     setIsStarting(true)
 
     try {
-      // Execute SCAMPER ideation technique
-      const response = await fetch('/api/ideation/scamper', {
+      // Execute both SCAMPER and SIT ideation techniques
+      // Run them sequentially to avoid rate limiting issues
+
+      // 1. Execute SCAMPER
+      const scamperResponse = await fetch('/api/ideation/scamper', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -144,24 +147,53 @@ function IdeationPhasePage() {
         })
       })
 
-      if (response.ok || response.status === 202) {
-        // Navigate to processing page
-        navigate('/ideation-processing')
-      } else {
-        // Handle error
-        const errorData = await response.json().catch(() => null)
+      if (!scamperResponse.ok && scamperResponse.status !== 202) {
+        const errorData = await scamperResponse.json().catch(() => null)
         const message =
           errorData?.error ||
-          'We could not start ideation. Please check your API key and try again.'
+          'Failed to start SCAMPER ideation. Please check your API key and try again.'
 
-        console.error('Ideation start failed:', {
-          status: response.status,
+        console.error('SCAMPER ideation start failed:', {
+          status: scamperResponse.status,
           message
         })
 
         setStartError(message)
         setIsStarting(false)
+        return
       }
+
+      // 2. Execute SIT
+      const sitResponse = await fetch('/api/ideation/sit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          apiKey
+        })
+      })
+
+      if (!sitResponse.ok && sitResponse.status !== 202) {
+        const errorData = await sitResponse.json().catch(() => null)
+        const message =
+          errorData?.error ||
+          'SCAMPER completed, but SIT ideation failed. Please check your API key and try again.'
+
+        console.error('SIT ideation start failed:', {
+          status: sitResponse.status,
+          message
+        })
+
+        setStartError(message)
+        setIsStarting(false)
+        return
+      }
+
+      // Both techniques started successfully
+      navigate('/ideation-processing')
+
     } catch (error) {
       console.error('Error starting ideation:', error)
       setStartError('We could not start ideation. Please check your API key and try again.')

@@ -14,8 +14,10 @@ import {
 } from './routes/analysis.js'
 import {
   runScamperRoute,
+  runSitRoute,
   getIdeationStatus,
-  downloadScamperReportRoute
+  downloadScamperReportRoute,
+  downloadSitReportRoute
 } from './routes/ideation.js'
 
 dotenv.config()
@@ -75,8 +77,10 @@ app.get('/api/analysis/report', downloadAnalysisReportRoute)
 
 // Ideation routes
 app.post('/api/ideation/scamper', runScamperRoute)
+app.post('/api/ideation/sit', runSitRoute)
 app.get('/api/ideation/status', getIdeationStatus)
 app.get('/api/ideation/report/scamper', downloadScamperReportRoute)
+app.get('/api/ideation/report/sit', downloadSitReportRoute)
 
 // Example: Protected route requiring session
 app.get('/api/protected', requireSession(), (req, res) => {

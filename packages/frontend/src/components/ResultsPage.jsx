@@ -14,6 +14,7 @@ function ResultsPage() {
   const [emailStatus, setEmailStatus] = useState('idle')
   const [emailError, setEmailError] = useState(null)
   const [scamperReportAvailable, setScamperReportAvailable] = useState(false)
+  const [sitReportAvailable, setSitReportAvailable] = useState(false)
 
   const email = watch('config.email')
   const apiKey = watch('config.apiKey')
@@ -107,8 +108,8 @@ function ResultsPage() {
 
     fetchStatus()
 
-    // Check for SCAMPER report availability
-    const checkScamperReport = async () => {
+    // Check for SCAMPER and SIT report availability
+    const checkIdeationReports = async () => {
       try {
         const ideationResponse = await fetch('/api/ideation/status', {
           credentials: 'include'
@@ -116,17 +117,22 @@ function ResultsPage() {
 
         if (ideationResponse.ok) {
           const data = await ideationResponse.json()
-          if (data.success && data.data.reportAvailable) {
-            setScamperReportAvailable(true)
+          if (data.success) {
+            if (data.data.scamperReportAvailable) {
+              setScamperReportAvailable(true)
+            }
+            if (data.data.sitReportAvailable) {
+              setSitReportAvailable(true)
+            }
           }
         }
       } catch (error) {
-        // Silently fail - SCAMPER report is optional
-        console.log('No SCAMPER report available:', error.message)
+        // Silently fail - ideation reports are optional
+        console.log('No ideation reports available:', error.message)
       }
     }
 
-    checkScamperReport()
+    checkIdeationReports()
 
     return () => {
       cancelled = true
@@ -139,6 +145,10 @@ function ResultsPage() {
 
   const handleDownloadScamper = () => {
     window.open('/api/ideation/report/scamper', '_blank', 'noopener,noreferrer')
+  }
+
+  const handleDownloadSit = () => {
+    window.open('/api/ideation/report/sit', '_blank', 'noopener,noreferrer')
   }
 
   const handleSendEmail = async () => {
@@ -247,6 +257,16 @@ function ResultsPage() {
                   onClick={handleDownloadScamper}
                 >
                   Download SCAMPER Ideation Report
+                </button>
+              )}
+
+              {sitReportAvailable && (
+                <button
+                  type="button"
+                  className="results-secondary-button"
+                  onClick={handleDownloadSit}
+                >
+                  Download SIT Ideation Report
                 </button>
               )}
 
