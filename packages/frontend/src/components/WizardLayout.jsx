@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useFormWizard } from '../context/FormWizardProvider'
+import StepsPanel from './StepsPanel'
 import './WizardLayout.css'
 
 function WizardLayout() {
@@ -33,12 +34,15 @@ function WizardLayout() {
 
   return (
     <div className="wizard-layout">
-      {sessionError && (
-        <div className="wizard-error" role="alert">
-          {sessionError}
-        </div>
-      )}
-      <Outlet />
+      <StepsPanel />
+      <main className="wizard-main">
+        {sessionError && (
+          <div className="wizard-error" role="alert">
+            {sessionError}
+          </div>
+        )}
+        <Outlet />
+      </main>
     </div>
   )
 }

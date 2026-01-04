@@ -147,6 +147,10 @@ function ResultsPage() {
     navigate('/problem')
   }
 
+  const handleContinueToIdeation = () => {
+    navigate('/ideation')
+  }
+
   const successfulSteps = steps.filter(step => step.status === 'completed')
 
   return (
@@ -187,6 +191,19 @@ function ResultsPage() {
                 generated a summary report you can download or receive via email.
               </p>
             </div>
+
+            <section className="results-phase-cta" aria-label="Continue to next phase">
+              <button
+                type="button"
+                className="results-ideation-button"
+                onClick={handleContinueToIdeation}
+              >
+                Continue to Ideation &amp; Hypothesis Formation
+              </button>
+              <p className="results-phase-cta-hint">
+                Use your validated problem statement as a springboard for ideation and testable hypotheses.
+              </p>
+            </section>
 
             <section className="results-actions" aria-label="Result actions">
               <button

@@ -1,0 +1,268 @@
+.steps-panel {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 2rem 1.5rem;
+  height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+}
+
+.steps-panel-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.steps-panel-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
+}
+
+.steps-panel-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.steps-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.step-item {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+  padding: 1rem 0;
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.step-number-circle {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.step-number {
+  display: block;
+}
+
+.step-check-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.step-connector {
+  position: absolute;
+  top: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: calc(100% + 2rem);
+  transition: background-color 0.2s ease;
+}
+
+/* Upcoming step styles */
+.step-item--upcoming .step-number-circle {
+  background: #f3f4f6;
+  border: 2px solid #d1d5db;
+  color: #9ca3af;
+}
+
+.step-item--upcoming .step-connector {
+  background: #e5e7eb;
+}
+
+.step-item--upcoming .step-title {
+  color: #6b7280;
+}
+
+.step-item--upcoming .step-description {
+  color: #9ca3af;
+}
+
+/* Active step styles */
+.step-item--active .step-number-circle {
+  background: #6366f1;
+  border: 2px solid #6366f1;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.step-item--active .step-connector {
+  background: #e5e7eb;
+}
+
+.step-item--active .step-title {
+  color: #111827;
+  font-weight: 600;
+}
+
+.step-item--active .step-description {
+  color: #4b5563;
+  font-weight: 500;
+}
+
+/* Completed step styles */
+.step-item--completed .step-number-circle {
+  background: #10b981;
+  border: 2px solid #10b981;
+  color: #ffffff;
+}
+
+.step-item--completed .step-connector {
+  background: #10b981;
+}
+
+.step-item--completed .step-title {
+  color: #059669;
+  font-weight: 500;
+}
+
+.step-item--completed .step-description {
+  color: #6b7280;
+}
+
+.step-content {
+  flex: 1;
+  padding-top: 0.25rem;
+}
+
+.step-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+.step-description {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+/* Mobile styles - horizontal top bar */
+@media (max-width: 768px) {
+  .steps-panel {
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem;
+    position: static;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .steps-panel-header {
+    display: none;
+  }
+
+  .steps-list {
+    flex-direction: row;
+    gap: 0;
+    padding: 0.5rem 0;
+  }
+
+  .step-item {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+    min-width: 6rem;
+    text-align: center;
+  }
+
+  .step-indicator {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .step-number-circle {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.75rem;
+  }
+
+  .step-check-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .step-connector {
+    position: absolute;
+    top: 50%;
+    left: 2rem;
+    transform: translateY(-50%);
+    width: calc(100% - 2rem);
+    height: 2px;
+  }
+
+  .step-item:last-child .step-connector {
+    display: none;
+  }
+
+  .step-content {
+    padding-top: 0;
+  }
+
+  .step-title {
+    font-size: 0.75rem;
+    margin-bottom: 0.125rem;
+  }
+
+  .step-description {
+    display: none;
+  }
+}
+
+/* Very small mobile - further compressed */
+@media (max-width: 480px) {
+  .steps-panel {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .step-item {
+    padding: 0 0.5rem;
+    min-width: 4.5rem;
+  }
+
+  .step-number-circle {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.7rem;
+  }
+
+  .step-connector {
+    left: 1.75rem;
+    width: calc(100% - 1.75rem);
+  }
+
+  .step-title {
+    font-size: 0.7rem;
+  }
+}

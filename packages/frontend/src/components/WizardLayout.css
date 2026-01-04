@@ -1,6 +1,15 @@
 .wizard-layout {
   min-height: 100vh;
   position: relative;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  background: #f9fafb;
+}
+
+.wizard-main {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #f9fafb;
 }
 
 /* Global Loading State */
@@ -57,4 +66,27 @@
 /* Focus styles for heading */
 h1:focus {
   outline: none;
+}
+
+/* Responsive Layout */
+@media (max-width: 768px) {
+  .wizard-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .wizard-main {
+    min-height: calc(100vh - 120px);
+  }
+
+  .wizard-error {
+    top: 8rem;
+    max-width: calc(100% - 2rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .wizard-error {
+    top: 7rem;
+  }
 }

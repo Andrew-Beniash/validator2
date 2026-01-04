@@ -5,6 +5,8 @@ import ClarificationFormPage from './components/ClarificationFormPage'
 import EmailApiConfigPage from './components/EmailApiConfigPage'
 import ProcessingPage from './components/ProcessingPage'
 import ResultsPage from './components/ResultsPage'
+import IdeationPhasePage from './components/IdeationPhasePage'
+import IdeationProcessingPage from './components/IdeationProcessingPage'
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +36,14 @@ export const router = createBrowserRouter([
       {
         path: 'results',
         element: <ResultsPage />
+      },
+      {
+        path: 'ideation',
+        element: <IdeationPhasePage />
+      },
+      {
+        path: 'ideation-processing',
+        element: <IdeationProcessingPage />
       }
     ]
   }
