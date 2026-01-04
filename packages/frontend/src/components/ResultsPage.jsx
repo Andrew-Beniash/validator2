@@ -13,6 +13,7 @@ function ResultsPage() {
   const [steps, setSteps] = useState([])
   const [emailStatus, setEmailStatus] = useState('idle')
   const [emailError, setEmailError] = useState(null)
+  const [scamperReportAvailable, setScamperReportAvailable] = useState(false)
 
   const email = watch('config.email')
   const apiKey = watch('config.apiKey')
@@ -106,6 +107,27 @@ function ResultsPage() {
 
     fetchStatus()
 
+    // Check for SCAMPER report availability
+    const checkScamperReport = async () => {
+      try {
+        const ideationResponse = await fetch('/api/ideation/status', {
+          credentials: 'include'
+        })
+
+        if (ideationResponse.ok) {
+          const data = await ideationResponse.json()
+          if (data.success && data.data.reportAvailable) {
+            setScamperReportAvailable(true)
+          }
+        }
+      } catch (error) {
+        // Silently fail - SCAMPER report is optional
+        console.log('No SCAMPER report available:', error.message)
+      }
+    }
+
+    checkScamperReport()
+
     return () => {
       cancelled = true
     }
@@ -113,6 +135,10 @@ function ResultsPage() {
 
   const handleDownload = () => {
     window.open('/api/analysis/report', '_blank', 'noopener,noreferrer')
+  }
+
+  const handleDownloadScamper = () => {
+    window.open('/api/ideation/report/scamper', '_blank', 'noopener,noreferrer')
   }
 
   const handleSendEmail = async () => {
@@ -213,6 +239,16 @@ function ResultsPage() {
               >
                 Download PDF Report
               </button>
+
+              {scamperReportAvailable && (
+                <button
+                  type="button"
+                  className="results-secondary-button"
+                  onClick={handleDownloadScamper}
+                >
+                  Download SCAMPER Ideation Report
+                </button>
+              )}
 
               <button
                 type="button"

@@ -132,15 +132,8 @@ function IdeationPhasePage() {
     setIsStarting(true)
 
     try {
-      // TODO: Backend endpoint to be implemented
-      // POST /api/ideation/run
-      // Will execute the 22 ideation techniques sequentially
-      // Each call will send:
-      //   - Problem statement + previous analysis summaries
-      //   - Technique-specific prompt text (from ideationPromptTemplates.js)
-      // Results will be stored per technique and written to separate .txt files
-
-      const response = await fetch('/api/ideation/run', {
+      // Execute SCAMPER ideation technique
+      const response = await fetch('/api/ideation/scamper', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

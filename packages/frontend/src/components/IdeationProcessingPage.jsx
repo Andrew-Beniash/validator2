@@ -18,16 +18,6 @@ function IdeationProcessingPage() {
 
     const fetchStatus = async () => {
       try {
-        // TODO: Backend endpoint to be implemented
-        // GET /api/ideation/status
-        // Will drive the 22-step progress UI (similar to /api/analysis/status)
-        // Returns:
-        //   - status: 'pending' | 'in-progress' | 'completed' | 'failed'
-        //   - steps: array of 22 technique objects with status
-        //   - currentStepIndex: current technique being processed
-        //   - currentStepLabel: optional detail label
-        //   - error: error message if failed
-
         const response = await fetch('/api/ideation/status', {
           credentials: 'include'
         })
